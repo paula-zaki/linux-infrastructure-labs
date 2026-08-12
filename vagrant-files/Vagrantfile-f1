@@ -1,0 +1,42 @@
+Vagrant.configure("2") do |config|
+# Don't forget to rename the file to 'Vagrantfile', otherwise it will not work { mv Vagrantfile-f1 Vagrantfile  } 
+  config.vm.define "lab1" do |lab1|
+    lab1.vm.box = "generic/rocky9"
+    lab1.vm.hostname = "lab1"
+    config.vm.synced_folder ".", "/vagrant"
+    lab1.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 1024
+      libvirt.cpus = 2
+    end
+    # Normally vagrant would sync the current file to /home/vagrant automatically. 
+    # It uses the UDP but modern distro like Fedroa 40+ has disabeled the UDP for security reasons. 
+    # Here we are telling vagrant to NOT use UDP and it will automatically use TCP and the dir will sync. 
+    # If you comment this line the machine will be created but without synchroniztion.
+    config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_udp: false
+
+    # Vagrant would automatically give an IP adresse for the machine but if i want to assign one manually use this line
+    #lab1.vm.network "private_network", ip: "192.168.121.18"
+
+    # making swap for the machine
+    lab1.vm.provision "shell", inline: <<-SHELL
+      # Check if swap file already exists
+      if [ ! -f /swapfile ]; then
+        sudo fallocate -l 4G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+      fi
+
+      # Check if swap is already on, if not, turn it on
+      if ! swapon -s | grep -q '/swapfile'; then
+        sudo swapon /swapfile
+      fi
+
+      # Add swap entry to /etc/fstab if not present
+      if ! grep -q '/swapfile none swap sw 0 0' /etc/fstab; then
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+      fi
+    SHELL
+
+  end
+
+end
