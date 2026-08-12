@@ -1,0 +1,41 @@
+Vagrant.configure("2") do |config|
+#Don't forget to rename the file to 'Vagrantfile' , otherwise it won't work { mv Vagrantfile-f2 Vagrantfile}
+    config.vm.define "lab2" do |lab2|
+      lab2.vm.box = "generic/rocky9"
+      lab2.vm.hostname = "lab2"
+
+      lab2.vm.provider :libvirt do |libvirt|
+        #libvirt.name = "lab2-vm"
+        libvirt.memory = "512"
+        libvirt.cpus = 2
+
+#this line is usedd to create the private network below
+# Modern Fedora system encourage rootless virtualization [ virsh uri ; gives the output of a rootless session ]
+# While libvirt still expect root access [ sudo virsh uri ; gives the output of system session ]
+# So we are assking libvirt to use the system session and not the user session
+# you can use this command to see the loggs while the creation [ VAGRANT_LOG=debug vagrant up 2>&1 | grep "qemu://" ]
+# for me there was a mix of system and session, which was causing a conflict
+        libvirt.qemu_use_session = false
+        libvirt.uri = "qemu:///system"
+      end
+
+
+# I have faced some issues with the netwrok part. The problem. The probleme was NetwokManager was managing the virb0 bridge and denying access for libvirt
+# the solution was the delete it from NetworkManager [nmcli connection delete virb0 && ip link delete virbr0] and then recreated 
+# recreate virb0 for netwrok acess [ sudo virsh net-define /usr/share/libvirt/networks/default.xml && sudo virsh net-start default && sudo virsh net-autostart default ]
+      lab2.vm.network "private_network", ip: "192.168.124.204"
+      #lab2.vm.network "private_network"
+
+      config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_udp: false, mount_options: ["tcp"]
+
+      # Provisioning script to set up users and passwords
+      lab2.vm.provision "shell", inline: <<-SHELL
+        echo "RootPassword!" | sudo passwd root --stdin
+        sudo useradd test
+        echo "test:Password!" | sudo chpasswd
+        sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sudo systemctl restart sshd
+      SHELL
+    end
+  end
