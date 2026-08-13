@@ -1,1 +1,3 @@
 This directory contains all the automation scripts written in Bash.
+
+All these scripts are designed for use with cron jobs or systemd timers to automate processes.
