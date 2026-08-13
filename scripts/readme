@@ -1,3 +1,5 @@
 This directory contains all the automation scripts written in Bash.
 
 All these scripts are designed for use with cron jobs or systemd timers to automate processes.
+
+Some of these scripts have dependencies that need to be installed, or variables that need to be defined. So please read them before execution, as it is good practice to read any script before running it.
