@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  # Ubuntu 22.04 base box
+  config.vm.box = "generic/ubuntu2204"
+
+  # Libvirt private network
+  #
+  # The default libvirt network is normally:
+  #   192.168.122.0/24
+  #
+  # The VM will use:
+  #   192.168.122.111
+  #
+  config.vm.network "private_network",
+                    ip: "192.168.122.111"
+
+  config.vm.provider :libvirt do |libvirt|
+
+    # VM resources
+    libvirt.memory = 2048
+    libvirt.cpus = 2
+
+    # Additional disks
+    #
+    # disk1 = 10 GB
+    # disk2 =  5 GB
+    # disk3 =  5 GB
+    # disk4 =  5 GB
+    # disk5 =  5 GB
+    # disk6 =  5 GB
+    #
+    # These are additional disks; the Ubuntu OS disk supplied
+    # by the Vagrant box remains separate.
+
+    libvirt.storage :file,
+                    size: "10G",
+                    type: "qcow2",
+                    bus: "virtio"
+
+    libvirt.storage :file,
+                    size: "5G",
+                    type: "qcow2",
+                    bus: "virtio"
+
+    libvirt.storage :file,
+                    size: "5G",
+                    type: "qcow2",
+                    bus: "virtio"
+
+    libvirt.storage :file,
+                    size: "5G",
+                    type: "qcow2",
+                    bus: "virtio"
+
+    libvirt.storage :file,
+                    size: "5G",
+                    type: "qcow2",
+                    bus: "virtio"
+
+    libvirt.storage :file,
+                    size: "5G",
+                    type: "qcow2",
+                    bus: "virtio"
+  end
+end
