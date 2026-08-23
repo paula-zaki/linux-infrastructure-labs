@@ -1,1 +1,3 @@
 This file contains all the variant files used to provision virtual machines with Libvirt.
+
+Don't forget to rename the file to 'Vagrantfile' , otherwise it won't work { mv Vagrantfile-f2 Vagrantfile}
