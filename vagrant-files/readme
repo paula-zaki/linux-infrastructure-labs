@@ -1,3 +1,27 @@
 This file contains all the variant files used to provision virtual machines with Libvirt.
 
-Don't forget to rename the file to 'Vagrantfile' , otherwise it won't work { mv Vagrantfile-f2 Vagrantfile}
+## Don't forget to rename the file to 'Vagrantfile' , otherwise it won't work { mv Vagrantfile-f2 Vagrantfile}
+
+## Troubleshooting the libvirt Networking Issue
+
+While configuring networking with Vagrant and libvirt, I repeatedly encountered the following error:
+
+`/usr/share/gems/gems/fog-libvirt-0.13.1/lib/fog/libvirt/requests/compute/vm_action.rb:7:in 'Libvirt::Domain#create': Call to virDomainCreate failed: /usr/libexec/qemu-bridge-helper --use-vnet --br=virbr0 --fd=27: failed to communicate with bridge helper: stderr=failed to get mtu of bridge 'virbr0': No such device (Libvirt::Error): Transport endpoint is not connected`
+
+After extensive troubleshooting and research, I discovered that the issue was related to how the `virbr0` interface was being managed.
+
+`virbr0` is the bridge normally created and managed by libvirt for its default virtual network. However, on my Fedora system, NetworkManager was also managing the interface, which resulted in a conflict and prevented libvirt from accessing the bridge correctly.
+
+This behavior is particularly relevant on Fedora and other Red Hat-based systems, where security and isolation are fundamental design principles. Fedora uses separate user sessions and privilege boundaries for services such as libvirt, similar to the isolation model used by technologies such as Podman.
+
+As a result, libvirt was operating within an isolated session that did not have the expected access to the `virbr0` network interface, which ultimately caused the networking failure.
+
+The solution was to configure libvirt so that it does not use the isolated networking session for this interface and instead uses the same network context as the main system.
+
+There is another approach that involves explicitly configuring and exposing the required network resources within the isolated libvirt session. However, that solution requires significantly more configuration and is unnecessarily complex for the purposes of this lab.
+
+For this project, using the host's main network context provides a simpler and more practical solution while maintaining the required level of isolation.
+
+Add these 2 lines : 
+                  libvirt.qemu_use_session = false
+                  libvirt.uri = "qemu:///system"
